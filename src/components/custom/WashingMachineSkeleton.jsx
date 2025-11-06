@@ -6,7 +6,7 @@ const WashingMachineSkeleton = ({ count = 15 }) => {
         {Array(count).fill().map((_, index) => (
                   <div key={index} className="p-4 rounded-md bg-gray-200">
                     <div className="flex items-center mb-2">  
-                      <Skeleton className="w-6 h-6 rounded-full mr-3" /> {/* Emoji placeholder */}  
+                      <Skeleton className="w-6 h-6 rounded-full mr-3" /> {/* Status indicator placeholder */}  
                       <Skeleton className="h-6 w-24" /> {/* Machine name placeholder */}  
                     </div>  
                     <div className="mt-auto">  
