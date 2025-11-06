@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import WashingMachineSkeleton from '@/components/custom/WashingMachineSkeleton';
 import WashingMachineFramework from '@/components/custom/WashingMachineFramework';
 import LaundryRoomList from '@/components/custom/LaundryRoomList';
+import { API_ENDPOINTS } from '@/config/api';
 
 const laundryRooms = [
   { id: 1, name: "沙河雁北洗衣房", shop_id: "202401041041470000069996565184" },
@@ -130,7 +131,7 @@ const Index = () => {
     if (selectedLaundryRoom) {
       localStorage.setItem('selectedLaundryRoom', JSON.stringify(selectedLaundryRoom));
       setIsLoading(true);
-      fetch(`http://xingyistarry-ser.byr.plus/api/v1/getLaundryMachines?LaundryID=${selectedLaundryRoom.shop_id}`)
+      fetch(API_ENDPOINTS.getLaundryMachines(selectedLaundryRoom.shop_id))
         .then(response => response.json())
         .then(data => {
           const machines = data["洗衣机"];
@@ -139,7 +140,7 @@ const Index = () => {
             // 处理未知状态，将其视为离线
             const deviceCode = machine.deviceCode;
             const isValidCode = deviceCode >= 0 && deviceCode < deviceCodeInfo.status.length;
-            
+
             return {
               id: key,
               type: "洗衣机",
@@ -155,7 +156,7 @@ const Index = () => {
 
           // 获取所有机器的使用数据
           const usagePromises = formattedMachines.map(machine =>
-            fetch(`http://xingyistarry-ser.byr.plus/api/v1/getMachineDetail?MachineID=${machine.id}`)
+            fetch(API_ENDPOINTS.getMachineDetail(machine.id))
               .then(response => response.ok ? response.json() : {})
               .then(usageData => ({ id: machine.id, data: usageData }))
               .catch(() => ({ id: machine.id, data: {} }))

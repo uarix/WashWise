@@ -2,90 +2,90 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from 'react-toastify';
-import { Skeleton } from "@/components/ui/skeleton"; 
+import { Skeleton } from "@/components/ui/skeleton";
 import WashingMachineCard from '@/components/custom/WashingMachineCard';
+import { API_ENDPOINTS } from '@/config/api';
 
-const WashingMachineFramework = ({ 
-  machine, 
+const WashingMachineFramework = ({
+  machine,
   isFavorite,
   onToggleFavorite,
   usageTotal = 0
 }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [usageData, setUsageData] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [usageData, setUsageData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-    const transformData = (data) => {
-        return Object.entries(data).map(([key, value]) => {
-            return { 
-              day: key.slice(-2) + "号", 
-              uses: value,
-              fullDate: key
-            };
+  const transformData = (data) => {
+    return Object.entries(data).map(([key, value]) => {
+      return {
+        day: key.slice(-2) + "号",
+        uses: value,
+        fullDate: key
+      };
+    });
+  };
+
+  // 自定义Tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-medium">{`${label}`}</p>
+          <p className="text-blue-600">
+            {`使用次数: ${payload[0].value}次`}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // 动态颜色
+  const getBarColor = (value, maxValue) => {
+    const intensity = value / maxValue;
+    if (intensity > 0.7) return '#059669'; // 高使用率 - 绿色
+    if (intensity > 0.4) return '#0891b2'; // 中等使用率 - 蓝色
+    return '#6b7280'; // 低使用率 - 灰色
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsLoading(true);
+      fetch(API_ENDPOINTS.getMachineDetail(machine.id))
+        .then(async response => {
+          if (!response.ok) {
+            const res = await response.json();
+            throw new Error(`${res["detail"]}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          setUsageData(transformData(data));
+          setIsLoading(false);
+        })
+        .catch(error => {
+          console.error('getMachineDetail API Error: ', error);
+          toast.error(
+            '获取洗衣机详细信息失败 ' + error,
+            {
+              autoClose: 1000,
+              closeOnClick: true,
+              hideProgressBar: true
+            }
+          );
+          setIsLoading(true);
         });
-    };
+    }
+  }, [isOpen, machine.id]);
 
-    // 自定义Tooltip
-    const CustomTooltip = ({ active, payload, label }) => {
-      if (active && payload && payload.length) {
-        return (
-          <div className="bg-white p-3 border rounded-lg shadow-lg">
-            <p className="font-medium">{`${label}`}</p>
-            <p className="text-blue-600">
-              {`使用次数: ${payload[0].value}次`}
-            </p>
-          </div>
-        );
-      }
-      return null;
-    };
+  const maxUsage = Math.max(...usageData.map(d => d.uses), 1);
 
-    // 动态颜色
-    const getBarColor = (value, maxValue) => {
-      const intensity = value / maxValue;
-      if (intensity > 0.7) return '#059669'; // 高使用率 - 绿色
-      if (intensity > 0.4) return '#0891b2'; // 中等使用率 - 蓝色
-      return '#6b7280'; // 低使用率 - 灰色
-    };
-
-    useEffect(() => {
-        if (isOpen) {
-            setIsLoading(true);
-            fetch(`http://xingyistarry-ser.byr.plus/api/v1/getMachineDetail?MachineID=${machine.id}`)
-            .then(async response => {
-              if (!response.ok) {
-                const res = await response.json();
-                throw new Error(`${res["detail"]}`);
-              }
-              return response.json();
-            })
-            .then(data => {
-                setUsageData(transformData(data));
-                setIsLoading(false);
-            })
-            .catch(error => {
-              console.error('getMachineDetail API Error: ', error);
-              toast.error(
-                '获取洗衣机详细信息失败 ' + error ,
-                {
-                    autoClose: 1000,
-                    closeOnClick: true,
-                    hideProgressBar: true
-                }
-              );
-              //setUsageData(mock_usageData);
-              setIsLoading(true);
-            });
-        }
-      }, [isOpen, machine.id]);
-    
-    const maxUsage = Math.max(...usageData.map(d => d.uses), 1);
-
-    return (
+  return (
     <Dialog onOpenChange={setIsOpen} >
       <DialogTrigger asChild>
         <div className="w-full h-full cursor-pointer">
-          <WashingMachineCard 
+          <WashingMachineCard
             machine={machine}
             isFavorite={isFavorite}
             onToggleFavorite={onToggleFavorite}
@@ -115,13 +115,13 @@ const WashingMachineFramework = ({
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={usageData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
+                <XAxis
                   dataKey="day"
                   tick={{ fontSize: 12 }}
                   axisLine={{ stroke: '#e0e0e0' }}
                 />
-                <YAxis 
-                  type="number" 
+                <YAxis
+                  type="number"
                   allowDecimals={false}
                   tick={{ fontSize: 12 }}
                   axisLine={{ stroke: '#e0e0e0' }}
@@ -135,7 +135,7 @@ const WashingMachineFramework = ({
               </BarChart>
             </ResponsiveContainer>
           )}
-          
+
           {/* 使用统计信息 */}
           {!isLoading && usageData.length > 0 && (
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
