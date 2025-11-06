@@ -136,14 +136,18 @@ const Index = () => {
           const machines = data["洗衣机"];
           const formattedMachines = Object.keys(machines).map((key) => {
             const machine = machines[key];
+            // 处理未知状态，将其视为离线
+            const deviceCode = machine.deviceCode;
+            const isValidCode = deviceCode >= 0 && deviceCode < deviceCodeInfo.status.length;
+            
             return {
               id: key,
               type: "洗衣机",
               name: machine.name,
-              status: deviceCodeInfo.status[machine.deviceCode],
-              color: deviceCodeInfo.color[machine.deviceCode],
-              progressColor: deviceCodeInfo.progressColor[machine.deviceCode],
-              remainingTime: machine.remainTime,
+              status: isValidCode ? deviceCodeInfo.status[deviceCode] : "离线",
+              color: isValidCode ? deviceCodeInfo.color[deviceCode] : "bg-red-100",
+              progressColor: isValidCode ? deviceCodeInfo.progressColor[deviceCode] : "bg-red-500",
+              remainingTime: machine.remainTime || 0,
             };
           });
 

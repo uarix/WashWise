@@ -5,17 +5,6 @@ import { toast } from 'react-toastify';
 import { Skeleton } from "@/components/ui/skeleton"; 
 import WashingMachineCard from '@/components/custom/WashingMachineCard';
 
-
-// const mock_usageData = [
-//     { day: "26", uses: 20 },
-//     { day: "28", uses: 15 },
-//     { day: "29", uses: 25 },
-//     { day: "31", uses: 22 },
-//     { day: "1", uses: 30 },
-//     { day: "2", uses: 28 },
-//     { day: "3", uses: 10 },
-//   ];
-
 const WashingMachineFramework = ({ 
   machine, 
   isFavorite,
@@ -107,10 +96,10 @@ const WashingMachineFramework = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {`洗衣机 #${machine.id} 详情`}
+            {machine.name || '未知设备'}
           </DialogTitle>
           <DialogDescription>
-            {machine.status}
+            ID: {machine.id} • {machine.status || '未知状态'}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
