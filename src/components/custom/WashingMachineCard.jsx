@@ -36,7 +36,7 @@ const WashingMachineCard = ({
             )}
 
             {/* 收藏按钮 - 桌面端悬停显示，移动端始终显示 */}
-            <div className="opacity-0 group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 sm:opacity-100 transition-opacity">
+            <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
               <Button
                 variant="ghost"
                 size="sm"
@@ -61,7 +61,7 @@ const WashingMachineCard = ({
           <div className="flex items-center justify-between mb-1">
             <span className="text-sm">{machine.status || '未知状态'}</span>
             {machine.remainingTime > 0 && (
-              <span className="text-xs">{`${Math.ceil(machine.remainingTime / 60)} 分钟`}</span>
+              <span className="text-xs">{`预计剩余 ${Math.ceil(machine.remainingTime / 60)} 分钟`}</span>
             )}
           </div>
           <Progress

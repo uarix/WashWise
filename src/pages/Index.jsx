@@ -191,8 +191,12 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <header className="bg-white shadow-md p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">{selectedLaundryRoom.name}</h1>
+        {/* 标题和控制面板合并到同一行 */}
+        <div className="flex flex-wrap gap-2 md:gap-4 items-center">
+          {/* 标题 - 在移动端隐藏 */}
+          <h1 className="hidden md:block text-2xl font-bold whitespace-nowrap">{selectedLaundryRoom.name}</h1>
+          
+          {/* 移动端菜单按钮 */}
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -225,25 +229,22 @@ const Index = () => {
               </SheetContent>
             </Sheet>
           </div>
-        </div>
 
-        {/* 控制面板 */}
-        <div className="flex flex-wrap gap-4 items-center">
           {/* 搜索框 */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 min-w-0 md:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="搜索洗衣机名称或状态..."
+              placeholder="搜索..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
 
           {/* 排序选择 */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-20 md:w-32 text-xs md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -257,15 +258,16 @@ const Index = () => {
               variant="outline"
               size="sm"
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="px-2 md:px-3"
             >
-              <ArrowUpDown className="h-4 w-4 mr-1" />
-              {sortOrder === 'asc' ? '升序' : '降序'}
+              <ArrowUpDown className="h-4 w-4 md:mr-1" />
+              <span className="hidden md:inline">{sortOrder === 'asc' ? '升序' : '降序'}</span>
             </Button>
           </div>
 
-          {/* 收藏统计 */}
+          {/* 收藏统计 - 移动端隐藏 */}
           {favoriteMachines.length > 0 && (
-            <div className="flex items-center space-x-1">
+            <div className="hidden sm:flex items-center space-x-1">
               <Star className="h-4 w-4 text-yellow-500" />
               <span className="text-sm text-gray-600">收藏: {favoriteMachines.length}</span>
             </div>
