@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import WashingMachineSkeleton from '@/components/custom/WashingMachineSkeleton';
 import WashingMachineFramework from '@/components/custom/WashingMachineFramework';
 import LaundryRoomList from '@/components/custom/LaundryRoomList';
-import { API_ENDPOINTS } from '@/config/api';
+import { getMachines } from '@/services/apiV2';
 
 const laundryRooms = [
   { id: 1, name: "沙河雁北洗衣房", shop_id: "202401041041470000069996565184" },
@@ -26,7 +26,8 @@ const washingMachines = [ //mock data
   { id: 4, type: "洗衣机", name: "Mock北邮学9楼15层2号机", status: "空闲", color: "bg-green-100", progressColor: "bg-green-500", remainingTime: 0 }
 ];
 
-const deviceCodeInfo = {
+// v2 API 状态码映射
+const statusCodeInfo = {
   status: ["空闲", "离线", "使用中"], // 0, 1, 2
   color: ["bg-green-100", "bg-red-100", "bg-blue-100"],
   progressColor: ["bg-green-500", "bg-red-500", "bg-blue-500"]
@@ -49,7 +50,6 @@ const Index = () => {
     const saved = localStorage.getItem('favoriteMachines');
     return saved ? JSON.parse(saved) : [];
   });
-  const [machineUsageData, setMachineUsageData] = useState({}); // 存储每台机器的使用数据
 
 
 
@@ -67,13 +67,6 @@ const Index = () => {
         ? prev.filter(id => id !== machineId)
         : [...prev, machineId]
     );
-  };
-
-  // 获取机器的7天使用总数
-  const getMachineUsageTotal = (machineId) => {
-    const data = machineUsageData[machineId];
-    if (!data) return 0;
-    return Object.values(data).reduce((sum, count) => sum + count, 0);
   };
 
   // 过滤和排序机器
@@ -115,7 +108,10 @@ const Index = () => {
           }
           break;
         case 'usage':
-          comparison = getMachineUsageTotal(a.id) - getMachineUsageTotal(b.id);
+          comparison = (a.usageCount || 0) - (b.usageCount || 0);
+          break;
+        case 'like':
+          comparison = (a.like || 0) - (b.like || 0);
           break;
         default:
           return 0;
@@ -131,51 +127,36 @@ const Index = () => {
     if (selectedLaundryRoom) {
       localStorage.setItem('selectedLaundryRoom', JSON.stringify(selectedLaundryRoom));
       setIsLoading(true);
-      fetch(API_ENDPOINTS.getLaundryMachines(selectedLaundryRoom.shop_id))
-        .then(response => response.json())
+
+      // 使用 v2 API 获取洗衣机列表
+      getMachines(selectedLaundryRoom.shop_id)
         .then(data => {
-          const machines = data["洗衣机"];
-          const formattedMachines = Object.keys(machines).map((key) => {
-            const machine = machines[key];
-            // 处理未知状态，将其视为离线
-            const deviceCode = machine.deviceCode;
-            const isValidCode = deviceCode >= 0 && deviceCode < deviceCodeInfo.status.length;
+          const machines = data.items || [];
+          const formattedMachines = machines.map((machine) => {
+            // v2 API 使用 status 字段（数字）
+            const statusCode = machine.status;
+            const isValidCode = statusCode >= 0 && statusCode < statusCodeInfo.status.length;
 
             return {
-              id: key,
-              type: "洗衣机",
+              id: machine.id.toString(), // 确保 ID 是字符串
+              type: machine.type || "洗衣机",
               name: machine.name,
-              status: isValidCode ? deviceCodeInfo.status[deviceCode] : "离线",
-              color: isValidCode ? deviceCodeInfo.color[deviceCode] : "bg-red-100",
-              progressColor: isValidCode ? deviceCodeInfo.progressColor[deviceCode] : "bg-red-500",
+              status: isValidCode ? statusCodeInfo.status[statusCode] : "离线",
+              color: isValidCode ? statusCodeInfo.color[statusCode] : "bg-red-100",
+              progressColor: isValidCode ? statusCodeInfo.progressColor[statusCode] : "bg-red-500",
               remainingTime: machine.remainTime || 0,
+              like: machine.like || 0,
+              usageCount: machine.usageCount || 0,
             };
           });
 
           setLaundryMachines(formattedMachines);
-
-          // 获取所有机器的使用数据
-          const usagePromises = formattedMachines.map(machine =>
-            fetch(API_ENDPOINTS.getMachineDetail(machine.id))
-              .then(response => response.ok ? response.json() : {})
-              .then(usageData => ({ id: machine.id, data: usageData }))
-              .catch(() => ({ id: machine.id, data: {} }))
-          );
-
-          Promise.all(usagePromises).then(results => {
-            const usageMap = {};
-            results.forEach(result => {
-              usageMap[result.id] = result.data;
-            });
-            setMachineUsageData(usageMap);
-          });
-
           setIsLoading(false);
         })
         .catch(error => {
           console.error('API Error:', error);
           toast.error(
-            '获取洗衣房信息失败\n ' + error,
+            '获取洗衣房信息失败\n ' + error.message,
             {
               autoClose: 2000,
               closeOnClick: true,
@@ -195,7 +176,7 @@ const Index = () => {
         <div className="flex flex-wrap gap-2 md:gap-4 items-center">
           {/* 标题 - 在移动端隐藏 */}
           <h1 className="hidden md:block text-2xl font-bold whitespace-nowrap">{selectedLaundryRoom.name}</h1>
-          
+
           {/* 移动端菜单按钮 */}
           <div className="md:hidden">
             <Sheet>
@@ -251,6 +232,7 @@ const Index = () => {
                 <SelectItem value="name">按名称</SelectItem>
                 <SelectItem value="time">按等待时间</SelectItem>
                 <SelectItem value="usage">按使用次数</SelectItem>
+                <SelectItem value="like">按点赞数</SelectItem>
               </SelectContent>
             </Select>
 
@@ -362,7 +344,7 @@ const Index = () => {
                       machine={machine}
                       isFavorite={favoriteMachines.includes(machine.id)}
                       onToggleFavorite={toggleFavorite}
-                      usageTotal={getMachineUsageTotal(machine.id)}
+                      usageTotal={machine.usageCount || 0}
                     />
                   </div>
                 ))

@@ -1,0 +1,1 @@
+该后端为项目早期验证版本，存在剩余时间不更新的已知问题，已停止支持，正式版见https://github.com/xingyi-Starry/washwise-go
