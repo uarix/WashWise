@@ -1,7 +1,7 @@
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Star, StarOff } from "lucide-react";
+import { Star, StarOff, ThumbsUp } from "lucide-react";
 
 const WashingMachineCard = ({
   machine,
@@ -25,8 +25,14 @@ const WashingMachineCard = ({
             <div className="font-bold text-sm truncate">{machine.name || '未知设备'}</div>
           </div>
 
-          {/* 收藏indicator和收藏按钮 */}
-          <div className="flex items-center space-x-2 ml-2">
+          {/* 点赞数、收藏indicator和收藏按钮 */}
+          <div className="flex items-center space-x-1.5 ml-2">
+            {/* 点赞数 */}
+            <div className="flex items-center space-x-0.5 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+              <ThumbsUp className="h-2.5 w-2.5 fill-current" />
+              <span className="text-xs font-medium">{machine.like || 0}</span>
+            </div>
+
             {/* 收藏标识 */}
             {isFavorite && (
               <div className="bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full text-xs flex items-center">
