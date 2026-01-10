@@ -110,6 +110,63 @@ export const dislikeMachine = async (machineId) => {
     return await request(API_ENDPOINTS_V2.dislikeMachine(machineId));
 };
 
+/**
+ * 注册通知
+ * @param {string} email - 邮箱地址
+ * @param {number} machineId - 洗衣机 ID（整数）
+ * @returns {Promise<Object>} 注册结果
+ * @example
+ * await registerNotice("user@example.com", 123);
+ */
+export const registerNotice = async (email, machineId) => {
+    if (!email) {
+        throw new Error('邮箱地址不能为空');
+    }
+    if (!machineId) {
+        throw new Error('洗衣机 ID 不能为空');
+    }
+    // 确保 machineId 是整数类型
+    const machineIdInt = typeof machineId === 'number' ? machineId : parseInt(machineId, 10);
+    if (isNaN(machineIdInt)) {
+        throw new Error('洗衣机 ID 必须是有效的整数');
+    }
+    return await request(API_ENDPOINTS_V2.registerNotice(), {
+        method: 'POST',
+        body: JSON.stringify({ email, machineId: machineIdInt }),
+    });
+};
+
+/**
+ * 获取通知列表
+ * @param {string} email - 邮箱地址
+ * @returns {Promise<{items: Array}>} 通知列表
+ * @example
+ * const data = await getNotices("user@example.com");
+ * // data.items = [{ id: 1, email: "...", machineId: 123, ... }, ...]
+ */
+export const getNotices = async (email) => {
+    if (!email) {
+        throw new Error('邮箱地址不能为空');
+    }
+    return await request(API_ENDPOINTS_V2.getNotices(email));
+};
+
+/**
+ * 取消通知
+ * @param {string|number} noticeId - 通知 ID
+ * @returns {Promise<void>}
+ * @example
+ * await cancelNotice(123);
+ */
+export const cancelNotice = async (noticeId) => {
+    if (!noticeId) {
+        throw new Error('通知 ID 不能为空');
+    }
+    return await request(API_ENDPOINTS_V2.cancelNotice(noticeId), {
+        method: 'POST',
+    });
+};
+
 // 默认导出所有 API 函数
 export default {
     getShops,
@@ -117,5 +174,8 @@ export default {
     getMachineDetail,
     likeMachine,
     dislikeMachine,
+    registerNotice,
+    getNotices,
+    cancelNotice,
 };
 

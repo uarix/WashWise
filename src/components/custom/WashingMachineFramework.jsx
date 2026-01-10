@@ -4,9 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { toast } from 'react-toastify';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, Clock, Timer } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Clock, Timer, Bell } from "lucide-react";
 import WashingMachineCard from '@/components/custom/WashingMachineCard';
-import { getMachineDetail, likeMachine, dislikeMachine } from '@/services/apiV2';
+import { getMachineDetail, likeMachine, dislikeMachine, registerNotice } from '@/services/apiV2';
+import { useNavigate } from 'react-router-dom';
+import { EMAIL_STORAGE_KEY } from '@/constants/storage';
 
 const WashingMachineFramework = ({
   machine,
@@ -14,11 +16,13 @@ const WashingMachineFramework = ({
   onToggleFavorite,
   usageTotal = 0
 }) => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [usageData, setUsageData] = useState([]);
   const [machineDetail, setMachineDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const transformData = (data) => {
     return Object.entries(data).map(([key, value]) => {
@@ -131,6 +135,46 @@ const WashingMachineFramework = ({
     }
   };
 
+  // 处理订阅通知
+  const handleSubscribe = async () => {
+    // 检查邮箱是否已设置
+    const userEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
+    if (!userEmail) {
+      toast.info('请先设置邮箱地址', {
+        autoClose: 2000,
+        closeOnClick: true,
+        hideProgressBar: true
+      });
+      // 关闭对话框并跳转到设置页
+      setIsOpen(false);
+      setTimeout(() => {
+        navigate('/settings');
+      }, 300);
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      // 确保 machineId 是整数类型
+      const machineId = parseInt(machine.id, 10);
+      const response = await registerNotice(userEmail, machineId);
+      toast.success(response.message || '订阅成功！洗衣完成后将发送邮件通知', {
+        autoClose: 3000,
+        closeOnClick: true,
+        hideProgressBar: true
+      });
+    } catch (error) {
+      console.error('订阅通知失败:', error);
+      toast.error('订阅失败: ' + error.message, {
+        autoClose: 2000,
+        closeOnClick: true,
+        hideProgressBar: true
+      });
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
   const maxUsage = Math.max(...usageData.map(d => d.uses), 1);
 
   return (
@@ -224,6 +268,25 @@ const WashingMachineFramework = ({
                   <ThumbsDown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   <span className="text-xs sm:text-sm">点踩</span>
                 </Button>
+              </div>
+
+              {/* 订阅通知按钮 */}
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-blue-200">
+                <Button
+                  onClick={handleSubscribe}
+                  disabled={isSubscribing}
+                  variant="outline"
+                  className="w-full border-green-300 hover:bg-green-50 text-green-700 h-8 sm:h-9"
+                  size="sm"
+                >
+                  <Bell className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="text-xs sm:text-sm">
+                    {isSubscribing ? '订阅中...' : '订阅完成通知'}
+                  </span>
+                </Button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  洗衣完成后将发送邮件提醒
+                </p>
               </div>
             </div>
           )}

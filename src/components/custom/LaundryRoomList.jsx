@@ -1,7 +1,8 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Star, X } from "lucide-react";
+import { Star, X, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 const LaundryRoomList = ({ 
   laundryRooms, 
@@ -11,10 +12,24 @@ const LaundryRoomList = ({
   machines = [],
   onMachineClick,
   onToggleFavorite
-}) => (
+}) => {
+  const navigate = useNavigate();
+
+  return (
     <ScrollArea className="h-full">
       <div className="p-4">
-        <h2 className="text-xl font-bold mb-4">洗衣房</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">洗衣房</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/settings')}
+            className="h-8 w-8 p-0"
+            title="设置"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
         {laundryRooms.map((room) => (
           <Button
             key={room.id}
@@ -72,5 +87,6 @@ const LaundryRoomList = ({
       </div>
     </ScrollArea>
   );
+};
 
 export default LaundryRoomList;

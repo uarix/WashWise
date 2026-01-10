@@ -43,6 +43,18 @@ export const API_ENDPOINTS_V2 = {
     // 点踩洗衣机
     dislikeMachine: (machineId) =>
         `${API_BASE_URL}/api/${API_VERSION_V2}/machine/${machineId}/dislike`,
+
+    // 注册通知
+    registerNotice: () =>
+        `${API_BASE_URL}/api/${API_VERSION_V2}/notice/register`,
+
+    // 获取通知列表
+    getNotices: (email) =>
+        `${API_BASE_URL}/api/${API_VERSION_V2}/notice/list?email=${encodeURIComponent(email)}`,
+
+    // 取消通知
+    cancelNotice: (noticeId) =>
+        `${API_BASE_URL}/api/${API_VERSION_V2}/notice/${noticeId}/cancel`,
 };
 
 // 请求超时时间 (毫秒)
